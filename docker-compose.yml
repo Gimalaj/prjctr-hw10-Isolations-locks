@@ -1,0 +1,64 @@
+version: '3.6'
+services:
+  php:
+    platform: linux/x86_64
+    container_name: php-server
+    build:
+      context: .
+      dockerfile: php-dockerfile
+    volumes:
+      - ./php:/usr/share/nginx/html/
+
+  mysql:
+    image: mariadb:10.9
+    restart: always
+    container_name: mariadb-server
+    volumes:
+      - hw10-db:/var/lib/mysql
+      - ./mysql_conf/setup.sql:/docker-entrypoint-initdb.d/setup.sql
+      - ./mysql_conf/.my.cnf:/root/.my.cnf 
+      - ./mysql_conf/50-server.cnf:/etc/mysql/mariadb.conf.d/50-server.cnf
+    environment:
+        MYSQL_ROOT_USER: root
+        MYSQL_ROOT_PASSWORD: qazSedcS123
+    ports:
+      - 3306:3306
+  
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    ports:
+      - 81:80
+    volumes:
+      - ./mysql_conf/phpmysql.conf:/etc/phpmyadmin/config.user.inc.php
+    environment:
+      - PMA_ARBITRARY=1
+    depends_on:
+      - mysql
+  
+  postgres:
+      image: postgres
+      container_name: postgres-server
+      restart: always
+      environment:
+        - POSTGRES_PASSWORD=qwerty123@
+        - POSTGRES_USER=prjctr
+        - POSTGRES_DB=prjctr
+      volumes:
+        - "postgres:/docker-entrypoint-initdb.d"
+      ports:
+        - 5432:5432
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    restart: always
+    depends_on:
+      - postgres
+    ports:
+      - 82:8080
+
+volumes:
+  hw10-db: {}
+  postgres: {}
